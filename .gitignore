@@ -205,3 +205,10 @@ gradle-app.setting
 **/build/
 
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,gradle,windows,macos
+.idea/jarRepositories.xml
+.idea/libraries-with-intellij-classes.xml
+.idea/modules/libs/opencv-452/testJavaOpenCV.libs.opencv-452.iml
+.idea/modules/libs/testJavaOpenCV.libs.iml
+.idea/vcs.xml
+.idea/jarRepositories.xml
+.idea/jarRepositories.xml
