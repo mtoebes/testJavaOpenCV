@@ -14,6 +14,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,7 +28,11 @@ import java.util.concurrent.CountDownLatch;
  * or create module-info
  * https://stackoverflow.com/questions/52578072/gradle-openjfx11-error-javafx-runtime-components-are-missing
  */
+
 public class TestOpenCVApplication extends Application {
+
+    public static final String SAMPLE_IMAGES_DIR = "src" + File.separator + "sample-images" + File.separator;
+
     public static final CountDownLatch latch = new CountDownLatch(1);
     public static TestOpenCVApplication testJavaFXApplication = null;
 
@@ -56,14 +61,14 @@ public class TestOpenCVApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        String fileName = "src\\sample-images\\open-cv-logo.png";
+        String fileName = SAMPLE_IMAGES_DIR + "open-cv-logo.png";
 
         Group originalImageGroup = loadImageIntoGroup(fileName, null);
         Group plane0ImageGroup = loadImageIntoGroup(fileName, 0);
         Group plane1ImageGroup = loadImageIntoGroup(fileName, 1);
         Group plane2ImageGroup = loadImageIntoGroup(fileName, 2);
 
-       GridPane gridPane = new GridPane();
+        GridPane gridPane = new GridPane();
         gridPane.add(originalImageGroup, 0, 0);
         gridPane.add(plane0ImageGroup, 1, 0);
         gridPane.add(plane1ImageGroup, 0, 1);
