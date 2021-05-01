@@ -15,6 +15,5 @@ public class Main {
     public static void loadOpenCV() {
             new Thread(() -> Application.launch(TestOpenCVApplication.class)).start();
         TestOpenCVApplication testJavaFXApplication = TestOpenCVApplication.waitForStartUpTest();
-        testJavaFXApplication.printSomething();
     }
 }
