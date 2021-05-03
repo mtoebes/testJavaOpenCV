@@ -11,18 +11,14 @@ import java.util.List;
 public class ImageHelper {
 
     public static Mat getChannelMat(Mat originalImage, int channel) {
-        List<Mat> planes = new ArrayList<>();
-        Core.split(originalImage, planes);
-        return planes.get(channel);
+        // TODO implement this code
+        System.out.println("NOT IMPLEMENTED YET");
+        return originalImage;
     }
 
     public static Mat getGrayscaleMat(Mat originalImage) {
-        Mat image = new Mat();
-
-        // Converting the image to gray scale and
-        // saving it in the dst matrix
-        Imgproc.cvtColor(originalImage, image, Imgproc.COLOR_RGB2GRAY);
-
-        return image;
+        // TODO implement this code
+        System.out.println("NOT IMPLEMENTED YET");
+        return originalImage;
     }
 }
