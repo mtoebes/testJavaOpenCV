@@ -7,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -34,27 +33,20 @@ import java.util.concurrent.CountDownLatch;
 
 public class TestOpenCVApplication extends Application {
 
-    public enum Transform {
-        BLUE_CHANNEL,
-        GREEN_CHANNEL,
-        RED_CHANNEL
-    }
-
-    ImageView originalImageView;
-    ImageView editedImageView;
-
-    Mat originalImage;
-    Mat editImage;
-
-    Transform selectedTransform = null;
-
     public static final String SAMPLE_IMAGES_DIR = "src" + File.separator + "sample-images" + File.separator;
     public static final String DEFAULT_IMAGE = SAMPLE_IMAGES_DIR + "open-cv-logo.png";
 
     public static final CountDownLatch latch = new CountDownLatch(1);
     public static TestOpenCVApplication testJavaFXApplication = null;
 
-    Stage stage;
+    private Stage stage;
+
+    private ImageView transformImageView;
+
+    private Mat originalImage;
+    private Mat editImage;
+
+    private Transform selectedTransform = Transform.ORIGINAL;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -91,18 +83,11 @@ public class TestOpenCVApplication extends Application {
         menuBar.getMenus().add(buildEditMenu());
 
         // Build image views
-        GridPane gridPane = new GridPane();
-
-        originalImageView = new ImageView();
-        Group originalImageGroup = new Group(originalImageView);
-        gridPane.add(originalImageGroup, 0, 0);
-
-        editedImageView = new ImageView();
-        Group editedImageGroup = new Group(editedImageView);
-        gridPane.add(editedImageGroup, 1, 0);
+        transformImageView = new ImageView();
+        Group editedImageGroup = new Group(transformImageView);
 
         // Display
-        VBox vBox = new VBox(menuBar, gridPane);
+        VBox vBox = new VBox(menuBar, editedImageGroup);
         Scene scene = new Scene(vBox);
 
         stage.setScene(scene);
@@ -127,6 +112,7 @@ public class TestOpenCVApplication extends Application {
         fileChooser.getExtensionFilters().add(extensionFilter);
 
         MenuItem open = new MenuItem("Open");
+        fileMenu.getItems().add(open);
         open.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(stage);
             try {
@@ -138,7 +124,18 @@ public class TestOpenCVApplication extends Application {
             }
         });
 
-        fileMenu.getItems().add(open);
+        MenuItem save = new MenuItem("Save");
+        fileMenu.getItems().add(save);
+        save.setOnAction(e -> {
+            File selectedFile = fileChooser.showSaveDialog(stage);
+            try {
+                if (selectedFile != null) {
+                    writeImage(selectedFile.getPath());
+                }
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
 
         return fileMenu;
     }
@@ -149,9 +146,22 @@ public class TestOpenCVApplication extends Application {
 
         final ToggleGroup toggleGroup = new ToggleGroup();
 
+        RadioMenuItem originalImage = new RadioMenuItem("Original");
+        originalImage.setToggleGroup(toggleGroup);
+        editMenu.getItems().add(originalImage);
+        originalImage.setOnAction(e -> {
+            try {
+                setSelectedTransform(Transform.ORIGINAL);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+
         Menu menuEffect = new Menu("RGB Channel");
 
         RadioMenuItem redChannel = new RadioMenuItem("Red");
+        redChannel.setToggleGroup(toggleGroup);
+        menuEffect.getItems().add(redChannel);
         redChannel.setOnAction(e -> {
             try {
                 setSelectedTransform(Transform.RED_CHANNEL);
@@ -161,6 +171,8 @@ public class TestOpenCVApplication extends Application {
         });
 
         RadioMenuItem greenChannel = new RadioMenuItem("Green");
+        greenChannel.setToggleGroup(toggleGroup);
+        menuEffect.getItems().add(greenChannel);
         greenChannel.setOnAction(e -> {
             try {
                 setSelectedTransform(Transform.GREEN_CHANNEL);
@@ -170,6 +182,8 @@ public class TestOpenCVApplication extends Application {
         });
 
         RadioMenuItem blueChannel = new RadioMenuItem("Blue");
+        blueChannel.setToggleGroup(toggleGroup);
+        menuEffect.getItems().add(blueChannel);
         blueChannel.setOnAction(e -> {
             try {
                 setSelectedTransform(Transform.BLUE_CHANNEL);
@@ -178,11 +192,17 @@ public class TestOpenCVApplication extends Application {
             }
         });
 
-        redChannel.setToggleGroup(toggleGroup);
-        greenChannel.setToggleGroup(toggleGroup);
-        blueChannel.setToggleGroup(toggleGroup);
+        RadioMenuItem grayChannel = new RadioMenuItem("Gray");
+        grayChannel.setToggleGroup(toggleGroup);
+        menuEffect.getItems().add(grayChannel);
+        grayChannel.setOnAction(e -> {
+            try {
+                setSelectedTransform(Transform.GRAY_CHANNEL);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
 
-        menuEffect.getItems().addAll(redChannel, greenChannel, blueChannel);
         editMenu.getItems().addAll(menuEffect);
 
         return editMenu;
@@ -195,8 +215,11 @@ public class TestOpenCVApplication extends Application {
 
     public void loadImage(String filePath) throws IOException {
         originalImage = Imgcodecs.imread(filePath);
-        displayImage(originalImage, originalImageView);
         performTransform();
+    }
+
+    public void writeImage(String filePath) throws IOException {
+        Imgcodecs.imwrite(filePath, editImage);
     }
 
     public void performTransform() throws IOException {
@@ -207,27 +230,9 @@ public class TestOpenCVApplication extends Application {
 
         editImage = getTransformedImage(originalImage, selectedTransform);
 
-        displayImage(editImage, editedImageView);
+        displayImage(editImage, transformImageView);
 
         stage.sizeToScene() ;
-    }
-
-    public Mat getTransformedImage(Mat originalImage, Transform selectedTransform) {
-
-        if (selectedTransform == null) {
-            return originalImage;
-        }
-
-        switch (selectedTransform) {
-            case BLUE_CHANNEL:
-                return ImageHelper.getChannelMat(originalImage, 0);
-            case GREEN_CHANNEL:
-                return ImageHelper.getChannelMat(originalImage, 1);
-            case RED_CHANNEL:
-                return ImageHelper.getChannelMat(originalImage, 2);
-            default:
-                return originalImage;
-        }
     }
 
     public void displayImage(Mat image, ImageView imageView) throws IOException {
@@ -245,7 +250,6 @@ public class TestOpenCVApplication extends Application {
         InputStream in = new ByteArrayInputStream(byteArray);
         BufferedImage bufImage = ImageIO.read(in);
 
-        System.out.println("Image Loaded");
         WritableImage writableImage = SwingFXUtils.toFXImage(bufImage, null);
 
         imageView.setImage(writableImage);
@@ -256,5 +260,26 @@ public class TestOpenCVApplication extends Application {
         imageView.setPreserveRatio(true);
         rect.height += image.height();
         rect.width = image.width();
+    }
+
+    public Mat getTransformedImage(Mat originalImage, Transform selectedTransform) {
+
+        if (selectedTransform == null) {
+            return originalImage;
+        }
+
+        switch (selectedTransform) {
+            case BLUE_CHANNEL:
+                return ImageHelper.getChannelMat(originalImage, 0);
+            case GREEN_CHANNEL:
+                return ImageHelper.getChannelMat(originalImage, 1);
+            case RED_CHANNEL:
+                return ImageHelper.getChannelMat(originalImage, 2);
+            case GRAY_CHANNEL:
+                return ImageHelper.getGrayscaleMat(originalImage);
+            case ORIGINAL:
+            default:
+                return originalImage;
+        }
     }
 }
