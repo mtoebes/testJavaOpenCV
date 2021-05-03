@@ -80,7 +80,7 @@ public class TestOpenCVApplication extends Application {
         // Build Menu Bar
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(buildFileMenu());
-        menuBar.getMenus().add(buildEditMenu());
+        menuBar.getMenus().add(buildTransformMenu());
 
         // Build image views
         transformImageView = new ImageView();
@@ -98,20 +98,19 @@ public class TestOpenCVApplication extends Application {
 
     public Menu buildFileMenu() {
 
-        Menu fileMenu = new Menu("File");
+        final Menu fileMenu = new Menu("File");
 
-        FileChooser fileChooser = new FileChooser();
-        File file = new File(SAMPLE_IMAGES_DIR);
+        final FileChooser fileChooser = new FileChooser();
+        final File file = new File(SAMPLE_IMAGES_DIR);
         if (!file.exists()) {
             file.mkdir();
         }
 
         fileChooser.setInitialDirectory(file);
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG files (*.png)", "*.png"));
 
-        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("PNG files (*.png)", "*.png");
-        fileChooser.getExtensionFilters().add(extensionFilter);
-
-        MenuItem open = new MenuItem("Open");
+        // Open image menu item
+        final MenuItem open = new MenuItem("Open");
         fileMenu.getItems().add(open);
         open.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(stage);
@@ -124,7 +123,8 @@ public class TestOpenCVApplication extends Application {
             }
         });
 
-        MenuItem save = new MenuItem("Save");
+        // Save image menu item
+        final MenuItem save = new MenuItem("Save");
         fileMenu.getItems().add(save);
         save.setOnAction(e -> {
             File selectedFile = fileChooser.showSaveDialog(stage);
@@ -140,72 +140,38 @@ public class TestOpenCVApplication extends Application {
         return fileMenu;
     }
 
-    public Menu buildEditMenu() {
+    public Menu buildTransformMenu() {
 
-        Menu editMenu = new Menu("Edit");
+        final Menu editMenu = new Menu("Transform");
 
         final ToggleGroup toggleGroup = new ToggleGroup();
 
-        RadioMenuItem originalImage = new RadioMenuItem("Original");
-        originalImage.setToggleGroup(toggleGroup);
-        editMenu.getItems().add(originalImage);
-        originalImage.setOnAction(e -> {
-            try {
-                setSelectedTransform(Transform.ORIGINAL);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        });
+        editMenu.getItems().add(buildTransformMenuItem("Original",  toggleGroup, Transform.ORIGINAL));
 
-        Menu menuEffect = new Menu("RGB Channel");
-
-        RadioMenuItem redChannel = new RadioMenuItem("Red");
-        redChannel.setToggleGroup(toggleGroup);
-        menuEffect.getItems().add(redChannel);
-        redChannel.setOnAction(e -> {
-            try {
-                setSelectedTransform(Transform.RED_CHANNEL);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        });
-
-        RadioMenuItem greenChannel = new RadioMenuItem("Green");
-        greenChannel.setToggleGroup(toggleGroup);
-        menuEffect.getItems().add(greenChannel);
-        greenChannel.setOnAction(e -> {
-            try {
-                setSelectedTransform(Transform.GREEN_CHANNEL);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        });
-
-        RadioMenuItem blueChannel = new RadioMenuItem("Blue");
-        blueChannel.setToggleGroup(toggleGroup);
-        menuEffect.getItems().add(blueChannel);
-        blueChannel.setOnAction(e -> {
-            try {
-                setSelectedTransform(Transform.BLUE_CHANNEL);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        });
-
-        RadioMenuItem grayChannel = new RadioMenuItem("Gray");
-        grayChannel.setToggleGroup(toggleGroup);
-        menuEffect.getItems().add(grayChannel);
-        grayChannel.setOnAction(e -> {
-            try {
-                setSelectedTransform(Transform.GRAY_CHANNEL);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        });
+        final Menu menuEffect = new Menu("RGB Channel");
+        menuEffect.getItems().add(buildTransformMenuItem("Red",  toggleGroup, Transform.RED_CHANNEL));
+        menuEffect.getItems().add(buildTransformMenuItem("Green",  toggleGroup, Transform.GREEN_CHANNEL));
+        menuEffect.getItems().add(buildTransformMenuItem("Blue",  toggleGroup, Transform.BLUE_CHANNEL));
+        menuEffect.getItems().add(buildTransformMenuItem("Gray",  toggleGroup, Transform.GRAY_CHANNEL));
 
         editMenu.getItems().addAll(menuEffect);
 
         return editMenu;
+    }
+
+    private RadioMenuItem buildTransformMenuItem(final String name, final ToggleGroup toggleGroup, final Transform transform) {
+
+        final RadioMenuItem menuItem = new RadioMenuItem(name);
+        menuItem.setToggleGroup(toggleGroup);
+        menuItem.setSelected(transform == selectedTransform);
+        menuItem.setOnAction(e -> {
+            try {
+                setSelectedTransform(transform);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+        return menuItem;
     }
 
     public void setSelectedTransform(Transform selectedTransform) throws IOException {
